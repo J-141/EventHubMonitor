@@ -1,0 +1,84 @@
+﻿@page "/listener"
+@using EventHubMonitor.Contracts.Configuration
+@using EventHubMonitor.Contracts.Client
+@using Monitor.Shared.ListenerComponents
+
+@inject IListenerClientFactory _factory
+
+
+<PageTitle>Listener</PageTitle>
+<div class="container">
+    <div class="row">
+        <div class="sidebar col-2">
+            <div class="list-group listener_list">
+                @foreach (var listener in Clients) {
+                    <button class="listener_button list-group-item list-group-item-primary @(CurrentClient == listener ? "active" : "")" @onclick="(() => SelectListener(listener))">
+                        @listener.Config.ListenerName
+                        @if (listener.IsConnected) {
+                            <span>&#x2714</span>
+                        }
+                        @if (listener.IsListening) {
+                            <span>&#x1F7E2</span>
+                        }
+                    </button>
+
+                }
+                <div class="list-group-item list-group-item-info">
+
+                    <button type="button" class="btn btn-info" @onclick="CreateNewListener">+</button>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-10">
+            @if (@CurrentClient != null) {
+                <div class="row">
+
+                    <ListenerConfigForm eventHubListenerConfig=@CurrentClient.Config>
+
+                    </ListenerConfigForm>
+                </div>
+                <div class="row">
+
+                    <button type="button" class="btn btn-dark col" @onclick="ConnectCurrentListener"> Connect &#x2714</button>   
+                    <button type="button" class="btn btn-danger col" @onclick="()=>RemoveListener(CurrentClient)"> Delete</button>
+
+                </div>
+
+                
+                @if (@CurrentClient!.IsConnected) {
+                    <ListenerEventList NewEventsToDisplay="CurrentClient?.EventsListened" OldEventsToDisplay="CurrentClient?.EventsRead">
+
+
+                    </ListenerEventList>
+                }
+            }
+
+        </div>
+    </div>
+</div>
+@code {
+
+    public EventHubListenerConfig NewClientConfig { get; set; } = new EventHubListenerConfig();
+    public List<IListenerClient> Clients { get; set; } = new List<IListenerClient>();
+    public IListenerClient CurrentClient { get; set; } = null;
+
+
+    public void CreateNewListener() {
+        var newListener = _factory.ConstructFromConfig(NewClientConfig);
+        Clients.Add(newListener);
+        NewClientConfig = new EventHubListenerConfig();
+        SelectListener(newListener);
+    }
+    public void ConnectCurrentListener() {
+        CurrentClient.Connect();
+    }
+    public async Task RemoveListener(IListenerClient listener) {
+        Clients.Remove(listener);
+        CurrentClient = null!;
+        await listener.DisposeAsync();
+    }
+    public void SelectListener(IListenerClient client) {
+        CurrentClient = client;
+    }
+}

@@ -1,0 +1,14 @@
+﻿
+@using System.Collections.ObjectModel
+
+    <div class="log-display">
+        <ul>
+            @foreach (var log in Logs) {
+                <li>> @log</li>
+            }
+        </ul>
+    </div>
+
+@code {
+    [Parameter] public ObservableCollection<string> Logs { get; set; }
+}

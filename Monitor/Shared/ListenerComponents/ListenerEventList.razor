@@ -1,0 +1,39 @@
+﻿@using EventHubMonitor.Contracts.Event
+@namespace Monitor.Shared.ListenerComponents
+
+    <div class="col">
+        <div class="list-group listener_list">
+            @foreach ((var evt, var index) in OldEventsToDisplay.Select((item, index) => (item, index))) {
+                <button class="listener_button list-group-item list-group-item-light @(SelectedEventIndex.indexOfOld == index ? "active" : "")" @onclick="(() => SelectEvent(index,-1))">
+                    @index @evt.EnqueuedTime
+                </button>
+            }
+            <div class="list-group-item list-group-item-danger">
+                <hr class="my-4" style="border-top: 3px solid red;">
+            </div>
+            @foreach ((var evt, var index) in NewEventsToDisplay.Select((item, index) => (item, index))) {
+                <button class="listener_button list-group-item list-group-item-light @(SelectedEventIndex.indexOfNew == index ? "active" : "")" @onclick="(() => SelectEvent(-1,index))">
+                    @index @evt.EnqueuedTime
+                </button>
+            }
+        </div>
+    </div>
+
+    <div class="col">
+         
+    </div>
+
+@code {
+    [Parameter]
+    public IEnumerable<EventToDisplay> NewEventsToDisplay { get; set; }
+    [Parameter]
+    public IEnumerable<EventToDisplay> OldEventsToDisplay { get; set; }
+
+
+    public (int indexOfOld, int indexOfNew) SelectedEventIndex { get; set; } = (-1, -1);
+
+    public void SelectEvent(int indexOld, int indexNew) {
+        SelectedEventIndex = (indexOld, indexNew);
+    }
+
+}
