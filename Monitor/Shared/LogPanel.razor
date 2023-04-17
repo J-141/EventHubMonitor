@@ -1,14 +1,15 @@
-﻿
-@using System.Collections.ObjectModel
+﻿@using  EventHubMonitor.Services.Logger
+@inject ILogger<LogPanel> Logger
+@inject BlazorComponentLoggerProvider LoggerProvider
 
-    <div class="log-display">
-        <ul>
-            @foreach (var log in Logs) {
-                <li>> @log</li>
-            }
-        </ul>
-    </div>
+<ul class="list-unstyled">
+    @foreach (var message in LoggerProvider.LogMessages) {
+        <li>@message</li>
+    }
+</ul>
 
 @code {
-    [Parameter] public ObservableCollection<string> Logs { get; set; }
+    protected override void OnInitialized() {
+        LoggerProvider.OnMessageLogged += (sender, message) => InvokeAsync(StateHasChanged);
+    }
 }

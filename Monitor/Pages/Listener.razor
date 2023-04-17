@@ -2,8 +2,10 @@
 @using EventHubMonitor.Contracts.Configuration
 @using EventHubMonitor.Contracts.Client
 @using Monitor.Shared.ListenerComponents
+@using System.Collections.ObjectModel
 
 @inject IListenerClientFactory _factory
+@inject ILogger<Listener> Logger
 
 
 <PageTitle>Listener</PageTitle>
@@ -53,7 +55,12 @@
                     </ListenerEventList>
                 }
             }
+            <div class="row">
 
+                <LogPanel>
+
+                </LogPanel>
+            </div>
         </div>
     </div>
 </div>
@@ -63,7 +70,6 @@
     public List<IListenerClient> Clients { get; set; } = new List<IListenerClient>();
     public IListenerClient CurrentClient { get; set; } = null;
 
-
     public void CreateNewListener() {
         var newListener = _factory.ConstructFromConfig(NewClientConfig);
         Clients.Add(newListener);
@@ -71,7 +77,13 @@
         SelectListener(newListener);
     }
     public void ConnectCurrentListener() {
-        CurrentClient.Connect();
+        try
+        {
+            CurrentClient.Connect();
+        }
+        catch(Exception e) {
+            Logger.LogError($"Error: {e.Message}");
+        }
     }
     public async Task RemoveListener(IListenerClient listener) {
         Clients.Remove(listener);
@@ -81,4 +93,5 @@
     public void SelectListener(IListenerClient client) {
         CurrentClient = client;
     }
+
 }

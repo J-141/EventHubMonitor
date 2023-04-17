@@ -48,15 +48,19 @@ namespace EventHubMonitor.Services.Client {
                 } else {
                     events = _consumer.ReadEventsFromPartitionAsync(option.Partition, EventPosition.Latest, _cancellationTokenSource.Token);
                 }
-
-                await foreach (var pe in events.WithCancellation(_cancellationTokenSource.Token)) {
-                    EventsListened.Append(new EventToDisplay() {
-                        Properties = pe.Data.Properties.ToDictionary<KeyValuePair<string, object>, string, string>(i => i.Key, i => i.Value.ToString() ?? ""),
-                        EnqueuedTime = pe.Data.EnqueuedTime.ToString(),
-                        CorrelationId = pe.Data.CorrelationId,
-                        PartitionKey = pe.Data.PartitionKey,
-                        Body = Encoding.UTF8.GetString(pe.Data.EventBody)
-                    });
+                try {
+                    await foreach (var pe in events.WithCancellation(_cancellationTokenSource.Token)) {
+                        EventsListened.Append(new EventToDisplay() {
+                            Properties = pe.Data.Properties.ToDictionary<KeyValuePair<string, object>, string, string>(i => i.Key, i => i.Value.ToString() ?? ""),
+                            EnqueuedTime = pe.Data.EnqueuedTime.ToString(),
+                            CorrelationId = pe.Data.CorrelationId,
+                            PartitionKey = pe.Data.PartitionKey,
+                            Body = Encoding.UTF8.GetString(pe.Data.EventBody)
+                        });
+                    }
+                }
+                catch (OperationCanceledException) {
+                    IsListening = false;
                 }
             }
         }
