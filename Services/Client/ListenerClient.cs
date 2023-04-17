@@ -28,7 +28,7 @@ namespace EventHubMonitor.Services.Client {
         }
         public void Connect() {
 
-            _consumer = new EventHubConsumerClient(Config.ConnectionString, Config.ConsumerGroup, Config.EventhubName);
+            _consumer = new EventHubConsumerClient(Config.ConsumerGroup, Config.ConnectionString, Config.EventhubName);
             IsConnected = true;
 
         }
