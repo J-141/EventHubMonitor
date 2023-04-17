@@ -1,0 +1,33 @@
+﻿@using EventHubMonitor.Contracts.Configuration;
+@namespace Monitor.Shared.ListenerComponents
+<form>
+    <div class="form-group ">
+        <div class="row">
+            <div class="col">
+                <label for="listenerName">Listener Name:</label>
+                <input class="form-control" id="listenerName" @bind="eventHubListenerConfig.ListenerName" />
+            </div>
+            <div class="col">
+
+                <label for="eventhubName">Event Hub Name:</label>
+                <input class="form-control" id="eventhubName" @bind="eventHubListenerConfig.EventhubName" />
+            </div>
+            <div class="col">
+
+                <label for="consumerGroup">Consumer Group:</label>
+                <input class="form-control" id="consumerGroup" @bind="eventHubListenerConfig.ConsumerGroup" />
+            </div>
+        </div>
+
+    </div>
+    <div class="form-group">
+        <label for="connectionString">Connection String:</label>
+        <textarea class="form-control" id="connectionString" @bind="eventHubListenerConfig.ConnectionString" />
+    </div>
+</form>
+
+
+@code {
+    [Parameter]
+    public EventHubListenerConfig eventHubListenerConfig { get; set; }
+}

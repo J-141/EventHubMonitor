@@ -1,0 +1,78 @@
+﻿@using EventHubMonitor.Contracts.Event
+@namespace Monitor.Shared.ListenerComponents
+
+<div class="col col-4">
+    <div class="list-group listener_list">
+        @foreach ((var evt, var index) in EventsToDisplay.Select((item, index) => (item, index))) {
+            <button class="listener_button list-group-item list-group-item-light @(SelectedEvent == evt ? "active" : "")" @onclick="(() => SelectEvent(evt))">
+                @index @evt.EnqueuedTime
+            </button>
+        }
+    </div>
+</div>
+
+<div class="col col-8">
+    @if (SelectedEvent != null) {
+        <div class="row">
+            <div class="col col-4">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Property</th>
+                            <th scope="col">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var k in SelectedEvent.Properties.Keys) {
+                            <tr>
+                                <th scope="row"> @k </th>
+                                <td> @SelectedEvent.Properties[k]</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="col col-8">
+                <div class="row">
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <th scope="row"> Partition Key </th>
+                                <td> @SelectedEvent.PartitionKey</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"> Correlation Id </th>
+                                <td> @SelectedEvent.CorrelationId</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"> EnqueuedTime </th>
+                                <td> @SelectedEvent.EnqueuedTime</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"> Body </th>
+                                <td> @SelectedEvent.Body</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+
+
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public IEnumerable<EventToDisplay> EventsToDisplay { get; set; }
+
+    public EventToDisplay SelectedEvent { get; set; } = null;
+
+
+    public void SelectEvent(EventToDisplay evt) {
+        SelectedEvent = evt;
+    }
+
+}

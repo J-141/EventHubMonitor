@@ -1,0 +1,14 @@
+﻿@using  EventHubMonitor.Services.Logger
+@inject BlazorComponentLoggerProvider LoggerProvider
+
+<ul class="list-unstyled">
+    @foreach (var message in LoggerProvider.LogMessages) {
+        <li>@message</li>
+    }
+</ul>
+
+@code {
+    protected override void OnInitialized() {
+        LoggerProvider.OnMessageLogged += (sender, message) => InvokeAsync(StateHasChanged);
+    }
+}

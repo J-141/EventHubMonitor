@@ -1,0 +1,15 @@
+.navbar {
+    padding-left: 1rem
+}
+
+.nav-item .nav-link.active > hr {
+    visibility: visible;
+    filter: blur(1.5px);
+}
+
+.oi {
+    width: 2rem;
+    font-size: 1.1rem;
+    vertical-align: text-top;
+    top: -2px;
+}

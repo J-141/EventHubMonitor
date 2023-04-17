@@ -1,0 +1,136 @@
+﻿@page "/listener"
+@using EventHubMonitor.Contracts.Configuration
+@using EventHubMonitor.Contracts.Client
+@using Monitor.Shared.ListenerComponents
+@using System.Collections.ObjectModel
+
+@inject IListenerClientFactory _factory
+@inject ILogger<Listener> Logger
+@inject IJSRuntime JSRuntime;
+
+
+<PageTitle>Listener</PageTitle>
+<div class="container">
+    <div class="row">
+        <div class="sidebar col-2">
+            <div class="list-group listener_list">
+                @foreach (var listener in Clients) {
+                    <button class="listener_button list-group-item list-group-item-primary @(CurrentClient == listener ? "active" : "")" @onclick="(() => SelectListener(listener))">
+                        @listener.Config.ListenerName
+                        @if (listener.IsConnected) {
+                            <span>&#x2714</span>
+                        }
+                        @if (listener.IsListening) {
+                            <span>&#x1F7E2</span>
+                        }
+                    </button>
+
+                }
+                <div class="list-group-item list-group-item-info">
+
+                    <button type="button" class="btn btn-info" @onclick="CreateNewListener">+</button>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-10">
+            @if (@CurrentClient != null) {
+                <div class="row">
+
+                    <ListenerConfigForm eventHubListenerConfig=@CurrentClient.Config>
+
+                    </ListenerConfigForm>
+                </div>
+                <div class="row">
+
+                    <button type="button" class="btn btn-dark col" @onclick="ConnectCurrentListener"> Connect &#x2714</button>
+                    <button type="button" class="btn btn-danger col" @onclick="()=>RemoveListener(CurrentClient)"> Delete</button>
+
+                </div>
+
+                @if (@CurrentClient.IsConnected) {
+
+                    <div class="row">
+                        <hr class="my-4" style="border-top: 3px solid; ">
+                    </div>
+
+                    <div class="row">
+                        <div class="input-group">
+
+                            <label for="partitionInput" class="input-group-text">Partition</label>
+                            <input type="text" class="form-control w-15" id="partitionInput" @bind-value="CurrentClient.Config.EventHubListeningOption.Partition" placeholder="">
+
+                            <label for="batchSizeInput" class="input-group-text">BatchSize</label>
+                            <input type="number" class="form-control w-5" id="batchSizeInput" @bind-value="CurrentClient.Config.EventHubListeningOption.BatchSize" placeholder="10">
+
+                            <label for="waitMinsInput" class="input-group-text">MaxWaitTime (min)</label>
+                            <input type="number" class="form-control w-5" id="waitMinsInput" @bind-value="CurrentClient.Config.EventHubListeningOption.MaxWaitingMins" placeholder="60">
+                            <div class="input-group-text">
+                                <input class="form-check-input" id="readFromBeginningCheck" type="checkbox" @bind-value="CurrentClient.Config.EventHubListeningOption.ReadFromBeginning">
+                                <label for="readFromBeginningCheck" class="d-block mx-2">
+                                    Read From Earliest
+                                </label>
+                            </div>
+                            <button class="btn btn-success" type="button" disabled="@(CurrentClient.IsListening)" @onclick="()=>CurrentClient.StartListening()">Start Listenning</button>
+
+                            <button class="btn btn-danger" type="button" disabled="@(!CurrentClient.IsListening)" @onclick="()=>CurrentClient.StopListening()"> Stop Listenning</button>
+
+                        </div>
+                    </div>
+                    <div class="row">
+
+                        <ListenerEventList EventsToDisplay="CurrentClient?.EventsListened">
+
+
+                        </ListenerEventList>
+                    </div>
+                }
+            }
+            <div class="row">
+
+                <LogPanel>
+
+                </LogPanel>
+            </div>
+        </div>
+    </div>
+</div>
+@code {
+
+    public EventHubListenerConfig NewClientConfig { get; set; } = new EventHubListenerConfig();
+    public List<IListenerClient> Clients { get; set; } = new List<IListenerClient>();
+    public IListenerClient CurrentClient { get; set; } = null;
+
+    public void CreateNewListener() {
+        var newListener = _factory.ConstructFromConfig(NewClientConfig);
+        Clients.Add(newListener);
+        NewClientConfig = new EventHubListenerConfig();
+        SelectListener(newListener);
+    }
+    public async Task ConnectCurrentListener() {
+
+        var properties = CurrentClient.Config.ConnectionString.Split(';', StringSplitOptions.RemoveEmptyEntries)
+        .Select(s => s.Split('=', 2, StringSplitOptions.RemoveEmptyEntries))
+        .ToDictionary(a => a[0], a => a[1]);
+        if (!properties.TryGetValue("Endpoint", out var endpoint) ||
+           !properties.TryGetValue("SharedAccessKeyName", out var sharedAccessKeyName) ||
+           !properties.TryGetValue("SharedAccessKey", out var sharedAccessKey)) {
+            throw new InvalidDataException("Invalid connection string");
+        }
+        string resourceUri = new UriBuilder(endpoint).Host;
+
+        var sasToken = await JSRuntime.InvokeAsync<string>("eventHubsInterop.createSasToken", resourceUri, sharedAccessKeyName, sharedAccessKey, CurrentClient.Config.EventHubListeningOption.MaxWaitingMins);
+
+        CurrentClient.Connect(sasToken);
+        CurrentClient.EventCallBack += () => InvokeAsync(StateHasChanged);
+    }
+    public async Task RemoveListener(IListenerClient listener) {
+        Clients.Remove(listener);
+        CurrentClient = null!;
+        await listener.DisposeAsync();
+    }
+    public void SelectListener(IListenerClient client) {
+        CurrentClient = client;
+    }
+
+}
