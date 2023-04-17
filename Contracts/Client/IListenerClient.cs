@@ -12,10 +12,10 @@ namespace EventHubMonitor.Contracts.Client
         public bool IsListening { get; }
         public void Connect();
 
-        public void ClearListenedEvents();
+        public void ClearEvents();
 
-        public Task StartListening(EventHubListeningOption option);
+        public Task StartListening();
         public void StopListening();
-        public Task ReadFromBegining(int batchSize);
+        public Task ReadBatchOfEvents();
     }
 }

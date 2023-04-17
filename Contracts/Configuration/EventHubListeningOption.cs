@@ -3,6 +3,6 @@
     public class EventHubListeningOption
     {
         public string Partition { set; get; } = "";
-        public int MaximumWaitTimeInSecond { set; get; } = 0;
+        public int BatchSize { set; get; } = 10;
     }
 }

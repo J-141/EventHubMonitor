@@ -47,12 +47,29 @@
 
                 </div>
 
-                
                 @if (@CurrentClient!.IsConnected) {
+
                     <ListenerEventList NewEventsToDisplay="CurrentClient?.EventsListened" OldEventsToDisplay="CurrentClient?.EventsRead">
 
 
                     </ListenerEventList>
+                    <div class="row">
+                        <div class="input-group">
+
+                            <label for="partitionInput" class="input-group-text">Partition</label>
+                            <input type="text" class="form-control w-25" id="partitionInput" @bind-value="CurrentClient.Config.EventHubListeningOption.Partition" placeholder="0">
+
+                            <label for="batchSizeInput" class="input-group-text">BatchSize</label>
+                            <input type="number" class="form-control w-5" id="batchSizeInput" @bind-value="CurrentClient.Config.EventHubListeningOption.BatchSize" placeholder="10">
+
+                            <button class="btn btn-primary" type="button">Read Events</button>
+
+                            <button class="btn btn-success" type="button">Start Listenning</button>
+
+                            <button class="btn btn-danger" type="button">Stop Listenning</button>
+
+                        </div>
+                    </div>
                 }
             }
             <div class="row">

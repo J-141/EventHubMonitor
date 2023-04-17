@@ -6,5 +6,6 @@
         public string EventhubName { set; get; } = "";
         public string ConnectionString { set; get; } = "";
         public string ConsumerGroup { set; get; } = "$Default";
+        public EventHubListeningOption EventHubListeningOption { set; get; } = new EventHubListeningOption();
     }
 }
