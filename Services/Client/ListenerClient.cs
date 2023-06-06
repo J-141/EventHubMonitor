@@ -24,6 +24,7 @@ namespace EventHubMonitor.Services.Client {
             EventsListened = new List<EventToDisplay>();
         }
 
+        
         public void ClearEvents() {
             EventsListened.Clear();
         }
@@ -61,6 +62,10 @@ namespace EventHubMonitor.Services.Client {
         public async Task StartListening() {
             if (!IsListening) {
                 IsListening = true;
+
+                _cancellationTokenSource.Dispose();
+                _cancellationTokenSource = new CancellationTokenSource();
+
                 IAsyncEnumerable<PartitionEvent> events;
                 if (string.IsNullOrWhiteSpace(Config.EventHubListeningOption.Partition)) {
                     events = _consumer.ReadEventsAsync(Config.EventHubListeningOption.ReadFromBeginning, cancellationToken: _cancellationTokenSource.Token);
@@ -87,9 +92,9 @@ namespace EventHubMonitor.Services.Client {
                 }
             }
         }
-
+        
         public async ValueTask DisposeAsync() {
-            if (_consumer != null) { await _consumer.DisposeAsync(); }
+            if (_consumer != null) { _cancellationTokenSource.Dispose(); await _consumer.DisposeAsync();  }
         }
     }
 }
