@@ -6,6 +6,7 @@
 
 @inject IListenerClientFactory _factory
 @inject ILogger<Listener> Logger
+@inject IJSRuntime JSRuntime;
 
 
 <PageTitle>Listener</PageTitle>
@@ -42,33 +43,46 @@
                 </div>
                 <div class="row">
 
-                    <button type="button" class="btn btn-dark col" @onclick="ConnectCurrentListener"> Connect &#x2714</button>   
+                    <button type="button" class="btn btn-dark col" @onclick="ConnectCurrentListener"> Connect &#x2714</button>
                     <button type="button" class="btn btn-danger col" @onclick="()=>RemoveListener(CurrentClient)"> Delete</button>
 
                 </div>
 
                 @if (@CurrentClient!.IsConnected) {
 
-                    <ListenerEventList NewEventsToDisplay="CurrentClient?.EventsListened" OldEventsToDisplay="CurrentClient?.EventsRead">
+                    <div class="row">
+                        <hr class="my-4" style="border-top: 3px solid; ">
+                    </div>
 
-
-                    </ListenerEventList>
                     <div class="row">
                         <div class="input-group">
 
                             <label for="partitionInput" class="input-group-text">Partition</label>
-                            <input type="text" class="form-control w-25" id="partitionInput" @bind-value="CurrentClient.Config.EventHubListeningOption.Partition" placeholder="0">
+                            <input type="text" class="form-control w-15" id="partitionInput" @bind-value="CurrentClient.Config.EventHubListeningOption.Partition" placeholder="">
 
                             <label for="batchSizeInput" class="input-group-text">BatchSize</label>
                             <input type="number" class="form-control w-5" id="batchSizeInput" @bind-value="CurrentClient.Config.EventHubListeningOption.BatchSize" placeholder="10">
 
-                            <button class="btn btn-primary" type="button">Read Events</button>
+                            <label for="waitMinsInput" class="input-group-text">MaxWaitTime (min)</label>
+                            <input type="number" class="form-control w-5" id="waitMinsInput" @bind-value="CurrentClient.Config.EventHubListeningOption.MaxWaitingMins" placeholder="60">
+                            <div class="input-group-text">
+                                <input class="form-check-input" id="readFromBeginningCheck" type="checkbox" @bind-value="CurrentClient.Config.EventHubListeningOption.ReadFromBeginning">
+                                <label for="readFromBeginningCheck" class="d-block mx-2">
+                                    Read From Earliest
+                                </label>
+                            </div>
+                            <button class="btn btn-success" type="button" disabled="@(CurrentClient.IsListening)" @onclick="()=>CurrentClient.StartListening()">Start Listenning</button>
 
-                            <button class="btn btn-success" type="button">Start Listenning</button>
-
-                            <button class="btn btn-danger" type="button">Stop Listenning</button>
+                            <button class="btn btn-danger" type="button" disabled="@(!CurrentClient.IsListening)" @onclick="()=>CurrentClient.StopListening()"> Stop Listenning</button>
 
                         </div>
+                    </div>
+                    <div class="row">
+
+                        <ListenerEventList EventsToDisplay="CurrentClient?.EventsListened">
+
+
+                        </ListenerEventList>
                     </div>
                 }
             }
@@ -93,14 +107,21 @@
         NewClientConfig = new EventHubListenerConfig();
         SelectListener(newListener);
     }
-    public void ConnectCurrentListener() {
-        try
-        {
-            CurrentClient.Connect();
+    public async Task ConnectCurrentListener() {
+
+        var properties = CurrentClient.Config.ConnectionString.Split(';', StringSplitOptions.RemoveEmptyEntries)
+        .Select(s => s.Split('=', StringSplitOptions.RemoveEmptyEntries))
+        .ToDictionary(a => a[0], a => a[1]);
+        if (!properties.TryGetValue("Endpoint", out var endpoint) ||
+           !properties.TryGetValue("SharedAccessKeyName", out var sharedAccessKeyName) ||
+           !properties.TryGetValue("SharedAccessKey", out var sharedAccessKey)) {
+            throw new InvalidDataException("Invalid connection string");
         }
-        catch(Exception e) {
-            Logger.LogError($"Error: {e.Message}");
-        }
+        string resourceUri = new UriBuilder(endpoint).Host;
+
+        var sasToken = await JSRuntime.InvokeAsync<string>("eventHubsInterop.createSasToken", resourceUri, sharedAccessKeyName, sharedAccessKey, CurrentClient.Config.EventHubListeningOption.MaxWaitingMins);
+
+        CurrentClient.Connect(sasToken);
     }
     public async Task RemoveListener(IListenerClient listener) {
         Clients.Remove(listener);
