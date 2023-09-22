@@ -48,7 +48,10 @@ namespace EventHubMonitor.Services.Client {
         }
 
         public ValueTask DisposeAsync() {
-            throw new NotImplementedException();
+            if (_producerClient != null) {
+                return _producerClient.DisposeAsync();
+            }
+            return ValueTask.CompletedTask;
         }
 
         public void Send() {

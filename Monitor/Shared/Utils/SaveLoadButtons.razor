@@ -1,0 +1,29 @@
+﻿@namespace Monitor.Shared.Utils
+@inject IJSRuntime JSRuntime
+<button type="button" class="btn btn-outline-primary" @onclick="saveToFile">
+    Save
+</button>
+<button type="button" class="btn btn-outline-primary" @onclick="loadFromFile">
+    Load
+</button>
+
+
+@code {
+    [Parameter] public Func<string> getStringToSave{ get; set; }
+    [Parameter] public EventCallback<string> onStringLoaded { get; set; }
+    [Parameter] public string defaultFileName { get; set; } = "config.json";
+
+    public async Task saveToFile() {
+
+        var stringToSave = getStringToSave();
+
+        await JSRuntime.InvokeVoidAsync("saveAsFile", defaultFileName, stringToSave);
+    }
+    public async Task loadFromFile() {
+
+        var fileContent = await JSRuntime.InvokeAsync<string>("loadFromFile");
+        await onStringLoaded.InvokeAsync(fileContent);
+    }
+
+
+}

@@ -1,8 +1,12 @@
 ﻿@page "/sender"
+@using System.Collections.ObjectModel
+@using System.Text.Json
+
 @using EventHubMonitor.Contracts.Configuration
 @using EventHubMonitor.Contracts.Client
+@using EventHubMonitor.Contracts.Event
 @using Monitor.Shared.SenderComponents
-@using System.Collections.ObjectModel
+@using Monitor.Shared.Utils
 
 @inject ISenderClientFactory _factory
 @inject ILogger<Sender> Logger
@@ -21,9 +25,8 @@
 
                 }
                 <div class="list-group-item list-group-item-info">
-
                     <button type="button" class="btn btn-info" @onclick="CreateNewSender">+</button>
-
+                    <SaveLoadButtons defaultFileName="senderConfig.json" getStringToSave="save" onStringLoaded="load"></SaveLoadButtons>
                 </div>
             </div>
         </div>
@@ -111,4 +114,17 @@
         CurrentClient = client;
     }
 
+    public string save() {
+        var tupleList = Clients.Select(x => new Tuple<EventHubSenderConfig, EventToSend>(x.Config, x.EventToSend)).ToList();
+        return JsonSerializer.Serialize(tupleList);
+    }
+    public void load(string config) {
+        var tupleList = JsonSerializer.Deserialize<IEnumerable<Tuple<EventHubSenderConfig,EventToSend>>>(config);
+        CurrentClient = null;
+        foreach (var c in Clients) {
+            c.DisposeAsync();
+        }
+        Clients = tupleList.Select(x => _factory.Construct(x.Item1,x.Item2)).ToList();
+        InvokeAsync(StateHasChanged);
+    }
 }

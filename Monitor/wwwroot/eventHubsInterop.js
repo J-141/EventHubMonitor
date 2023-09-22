@@ -31,3 +31,31 @@ window.eventHubsInterop = {
             encodedSignature + '&se=' + ttl + '&skn=' + keyName;
     }
 };
+
+window.saveAsFile = (filename, content) => {
+    const blob = new Blob([content], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+};
+
+window.loadFromFile = (elementId) => {
+    return new Promise((resolve, reject) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = event => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = readerEvent => resolve(readerEvent.target.result);
+                reader.onerror = error => reject(error);
+                reader.readAsText(file);
+            }
+        };
+        input.click();
+    });
+};

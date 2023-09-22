@@ -1,8 +1,12 @@
 ﻿@page "/listener"
+@using System.Collections.ObjectModel
+@using System.Text.Json
+
+
 @using EventHubMonitor.Contracts.Configuration
 @using EventHubMonitor.Contracts.Client
 @using Monitor.Shared.ListenerComponents
-@using System.Collections.ObjectModel
+@using Monitor.Shared.Utils
 
 @inject IListenerClientFactory _factory
 @inject ILogger<Listener> Logger
@@ -29,7 +33,7 @@
                 <div class="list-group-item list-group-item-info">
 
                     <button type="button" class="btn btn-info" @onclick="CreateNewListener">+</button>
-
+                    <SaveLoadButtons defaultFileName="listenerConfig.json" getStringToSave="save" onStringLoaded="load"></SaveLoadButtons>
                 </div>
             </div>
         </div>
@@ -77,9 +81,11 @@
 
                         </div>
                     </div>
+
                     <div class="row">
                         <hr class="my-4" style="border-top: 3px solid; ">
                     </div>
+
                     <div class="row">
 
                         <ListenerEventList EventsToDisplay="CurrentClient?.EventsListened">
@@ -124,7 +130,7 @@
         CurrentClient.EventCallBack += () => InvokeAsync(StateHasChanged);
 
         await CurrentClient.ConnectAsync(sasToken);
-        
+
     }
     public async Task RemoveListener(IListenerClient listener) {
         Clients.Remove(listener);
@@ -133,6 +139,20 @@
     }
     public void SelectListener(IListenerClient client) {
         CurrentClient = client;
+    }
+
+    public string save() {
+        var configList = Clients.Select(x => x.Config).ToList();
+        return JsonSerializer.Serialize(configList);
+    }
+    public void load(string config) {
+        var configList = JsonSerializer.Deserialize<IEnumerable<EventHubListenerConfig>>(config);
+        CurrentClient = null;
+        foreach (var c in Clients) {
+            c.DisposeAsync();
+        }
+        Clients = configList.Select(x => _factory.Construct(x)).ToList();
+        InvokeAsync(StateHasChanged);
     }
 
 }
