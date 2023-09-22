@@ -18,7 +18,7 @@ builder.Services.AddLogging(config => {
     config.AddProvider(loggerProvider);
 });
 
-
 builder.Services.AddSingleton<IListenerClientFactory, ListenerClientFactory>();
+builder.Services.AddSingleton<ISenderClientFactory, SenderClientFactory>();
 
 await builder.Build().RunAsync();

@@ -1,0 +1,29 @@
+﻿@using EventHubMonitor.Contracts.Configuration;
+
+@namespace Monitor.Shared.SenderComponents
+<form>
+    <div class="form-group ">
+        <div class="row">
+            <div class="col">
+                <label for="senderName">Sender Name:</label>
+                <input class="form-control" id="senderName" @bind="eventHubSenderConfig.SenderName" />
+            </div>
+            <div class="col">
+
+                <label for="eventhubName">Event Hub Name:</label>
+                <input class="form-control" id="eventhubName" @bind="eventHubSenderConfig.EventHubName" />
+            </div>
+
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="connectionString">Connection String:</label> 
+        <textarea class="form-control" id="connectionString" @bind="eventHubSenderConfig.ConnectionString" />
+    </div>
+</form>
+
+
+@code {
+    [Parameter]
+    public EventHubSenderConfig eventHubSenderConfig { get; set; }
+}

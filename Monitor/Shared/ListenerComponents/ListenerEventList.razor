@@ -4,7 +4,7 @@
 <div class="col col-4">
     <div class="list-group listener_list">
         @foreach ((var evt, var index) in EventsToDisplay.Select((item, index) => (item, index))) {
-            <button class="listener_button list-group-item list-group-item-light @(SelectedEvent == evt ? "active" : "")" @onclick="(() => SelectEvent(evt))">
+            <button class="list-group-item list-group-item-light @(SelectedEvent == evt ? "active" : "")" @onclick="(() => SelectEvent(evt))">
                 @index @evt.EnqueuedTime
             </button>
         }

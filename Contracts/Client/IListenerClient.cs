@@ -9,13 +9,13 @@ namespace EventHubMonitor.Contracts.Client {
         public event Action EventCallBack;
 
         public List<EventToDisplay> EventsListened { get; }
-        public bool IsConnected { get; set; }
+        public bool IsConnected { get; }
         public EventHubListenerConfig Config { get; }
         public bool IsListening { get; }
 
-        public void Connect();
+        public Task ConnectAsync();
 
-        public void Connect(string tokenCredential);
+        public Task ConnectAsync(string tokenCredential);
 
         public void ClearEvents();
 

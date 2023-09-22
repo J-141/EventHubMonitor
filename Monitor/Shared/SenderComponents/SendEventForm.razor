@@ -1,0 +1,77 @@
+﻿@using EventHubMonitor.Contracts.Event
+@using EventHubMonitor.Contracts.Client
+
+@namespace Monitor.Shared.SenderComponents
+    <div class="col col-4">
+    <div class="row">
+        <div class="col">
+            Properties
+        </div>
+    </div>
+    <hr>
+    @foreach (var item in eventToSend.Properties.ToList()) {
+            
+        <div class="row">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">@item.Key</span>
+                </div>
+                <input class="form-control" @bind="eventToSend.Properties[item.Key]" placeholder="Value" id="item.Key" />
+                <button type="button" class="btn btn-danger" @onclick="() => eventToSend.Properties.Remove(item.Key)">Delete</button>
+            </div>
+        </div>
+    }
+    <hr>
+
+    <!-- Input fields for adding a new item -->
+    <div class="row">
+        <div class="input-group">
+            <input class="form-control" @bind="NewKey" />
+            <input class="form-control" @bind="NewValue" />
+            <button type="button" class="btn btn-success" @onclick="AddNewItem">Add</button>
+        </div>
+        
+    </div>
+</div>
+<div class="col col-8">
+    <div class="row">
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <span class="input-group-text">PartitionKey</span>
+            </div>
+            <input class="form-control" @bind="eventToSend.PartitionKey" id="partitionKey" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <span class="input-group-text">CorrelationId</span>
+            </div>
+            <input class="form-control" @bind="eventToSend.CorrelationId" id="correlationId" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <label for="eventBody">Body:</label>
+            <textarea class="form-control" id="eventBody" @bind="eventToSend.Body" />
+        </div>
+    </div>
+    </div>
+@code {
+
+    [Parameter]
+    public EventToSend eventToSend { get; set; } = null;
+    public string NewKey { get; set; } = "key";
+    public string NewValue { get; set; } = "value";
+    public void AddNewItem() {
+        if (!string.IsNullOrEmpty(NewKey) && !eventToSend.Properties.ContainsKey(NewKey)) {
+            eventToSend.Properties[NewKey] = NewValue;
+            NewKey = "key";
+            NewValue = "value";
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+}

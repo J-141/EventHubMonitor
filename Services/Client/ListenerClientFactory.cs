@@ -12,8 +12,12 @@ namespace Services.Client {
             _logger = logger;
         }
 
-        public IListenerClient ConstructFromConfig(EventHubListenerConfig config) {
+        public IListenerClient Construct(EventHubListenerConfig config) {
             return new ListenerClient(config, _logger);
+        }
+
+        public IListenerClient Construct() {
+            return new ListenerClient(new EventHubListenerConfig(), _logger);
         }
     }
 }

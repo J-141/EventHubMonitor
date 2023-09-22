@@ -15,7 +15,7 @@
         <div class="sidebar col-2">
             <div class="list-group listener_list">
                 @foreach (var listener in Clients) {
-                    <button class="listener_button list-group-item list-group-item-primary @(CurrentClient == listener ? "active" : "")" @onclick="(() => SelectListener(listener))">
+                    <button class="list-group-item list-group-item-primary @(CurrentClient == listener ? "active" : "")" @onclick="(() => SelectListener(listener))">
                         @listener.Config.ListenerName
                         @if (listener.IsConnected) {
                             <span>&#x2714</span>
@@ -78,6 +78,9 @@
                         </div>
                     </div>
                     <div class="row">
+                        <hr class="my-4" style="border-top: 3px solid; ">
+                    </div>
+                    <div class="row">
 
                         <ListenerEventList EventsToDisplay="CurrentClient?.EventsListened">
 
@@ -97,14 +100,12 @@
 </div>
 @code {
 
-    public EventHubListenerConfig NewClientConfig { get; set; } = new EventHubListenerConfig();
     public List<IListenerClient> Clients { get; set; } = new List<IListenerClient>();
     public IListenerClient CurrentClient { get; set; } = null;
 
     public void CreateNewListener() {
-        var newListener = _factory.ConstructFromConfig(NewClientConfig);
+        var newListener = _factory.Construct();
         Clients.Add(newListener);
-        NewClientConfig = new EventHubListenerConfig();
         SelectListener(newListener);
     }
     public async Task ConnectCurrentListener() {
@@ -119,10 +120,11 @@
         }
         string resourceUri = new UriBuilder(endpoint).Host;
 
-        var sasToken = await JSRuntime.InvokeAsync<string>("eventHubsInterop.createSasToken", resourceUri, sharedAccessKeyName, sharedAccessKey, CurrentClient.Config.EventHubListeningOption.MaxWaitingMins);
-
-        CurrentClient.Connect(sasToken);
+        var sasToken = await JSRuntime.InvokeAsync<string>("eventHubsInterop.createSasToken", resourceUri, sharedAccessKeyName, sharedAccessKey, 1440);
         CurrentClient.EventCallBack += () => InvokeAsync(StateHasChanged);
+
+        await CurrentClient.ConnectAsync(sasToken);
+        
     }
     public async Task RemoveListener(IListenerClient listener) {
         Clients.Remove(listener);

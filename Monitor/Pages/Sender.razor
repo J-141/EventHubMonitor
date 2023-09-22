@@ -1,0 +1,114 @@
+﻿@page "/sender"
+@using EventHubMonitor.Contracts.Configuration
+@using EventHubMonitor.Contracts.Client
+@using Monitor.Shared.SenderComponents
+@using System.Collections.ObjectModel
+
+@inject ISenderClientFactory _factory
+@inject ILogger<Sender> Logger
+@inject IJSRuntime JSRuntime;
+
+
+<PageTitle>Sender</PageTitle>
+<div class="container">
+    <div class="row">
+        <div class="sidebar col-2">
+            <div class="list-group sender_list">
+                @foreach (var sender in Clients) {
+                    <button class="list-group-item list-group-item-primary @(CurrentClient == sender ? "active" : "")" @onclick="(() => SelectSender(sender))">
+                        @sender.Config.SenderName
+                    </button>
+
+                }
+                <div class="list-group-item list-group-item-info">
+
+                    <button type="button" class="btn btn-info" @onclick="CreateNewSender">+</button>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-10">
+            @if (@CurrentClient != null) {
+                <div class="row">
+
+                    <SenderConfigForm eventHubSenderConfig=@CurrentClient.Config>
+
+                    </SenderConfigForm>
+                </div>
+                <div class="row">
+
+                    <button type="button" class="btn btn-dark col" @onclick="ConnectCurrentSender"> Connect &#x2714</button>
+                    <button type="button" class="btn btn-danger col" @onclick="()=>RemoveSender(CurrentClient)"> Delete</button>
+
+                </div>
+
+                @if (@CurrentClient.IsConnected) {
+
+                    <div class="row">
+                        <hr class="my-4" style="border-top: 3px solid; ">
+                    </div>
+
+                    <div class="row">
+
+                        <SendEventForm eventToSend="CurrentClient?.EventToSend">
+
+
+                        </SendEventForm>
+                    </div>
+                    <div class="row">
+                        <hr class="my-4" style="border-top: 3px solid; ">
+                    </div>
+
+                    <div class="row">
+
+                        <button type="button" class="btn btn-primary col" @onclick="CurrentClient.Send">Send event</button>
+
+                    </div>
+                }
+            }
+            
+            <div class="row">
+
+                <LogPanel>
+
+                </LogPanel>
+            </div>
+        </div>
+    </div>
+</div>
+@code {
+
+    public List<ISenderClient> Clients { get; set; } = new List<ISenderClient>();
+    public ISenderClient CurrentClient { get; set; } = null;
+
+    public void CreateNewSender() {
+        var newSender = _factory.Construct();
+        Clients.Add(newSender);
+        SelectSender(newSender);
+    }
+    public async Task ConnectCurrentSender() {
+
+        var properties = CurrentClient.Config.ConnectionString.Split(';', StringSplitOptions.RemoveEmptyEntries)
+        .Select(s => s.Split('=', 2, StringSplitOptions.RemoveEmptyEntries))
+        .ToDictionary(a => a[0], a => a[1]);
+        if (!properties.TryGetValue("Endpoint", out var endpoint) ||
+           !properties.TryGetValue("SharedAccessKeyName", out var sharedAccessKeyName) ||
+           !properties.TryGetValue("SharedAccessKey", out var sharedAccessKey)) {
+            throw new InvalidDataException("Invalid connection string");
+        }
+        string resourceUri = new UriBuilder(endpoint).Host;
+
+        var sasToken = await JSRuntime.InvokeAsync<string>("eventHubsInterop.createSasToken", resourceUri, sharedAccessKeyName, sharedAccessKey, 1440);
+
+        CurrentClient.Connect(sasToken);
+    }
+    public async Task RemoveSender(ISenderClient Sender) {
+        Clients.Remove(Sender);
+        CurrentClient = null!;
+        await Sender.DisposeAsync();
+    }
+    public void SelectSender(ISenderClient client) {
+        CurrentClient = client;
+    }
+
+}
