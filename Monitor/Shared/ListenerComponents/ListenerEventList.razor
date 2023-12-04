@@ -1,7 +1,7 @@
 ﻿@using EventHubMonitor.Contracts.Event
 @namespace Monitor.Shared.ListenerComponents
 
-<div class="col col-4">
+<div class="col col-3">
     <div class="list-group listener_list">
         @foreach ((var evt, var index) in EventsToDisplay.Select((item, index) => (item, index))) {
             <button class="list-group-item list-group-item-light @(SelectedEvent == evt ? "active" : "")" @onclick="(() => SelectEvent(evt))">
@@ -11,7 +11,7 @@
     </div>
 </div>
 
-<div class="col col-8">
+<div class="col col-9">
     @if (SelectedEvent != null) {
         <div class="row">
             <div class="col col-4">
@@ -33,7 +33,6 @@
                 </table>
             </div>
             <div class="col col-8">
-                <div class="row">
                     <table class="table">
                         <tbody>
                             <tr>
@@ -54,11 +53,7 @@
                             </tr>
                         </tbody>
                     </table>
-                </div>
-                <div class="row">
 
-
-                </div>
             </div>
         </div>
     }
