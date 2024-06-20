@@ -23,7 +23,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v2
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 8.0.x
           
       # Install dotnet wasm buildtools workload
       - name: Install .NET WASM Build Tools
@@ -32,13 +32,6 @@ jobs:
       # Publishes Blazor project to the release-folder
       - name: Publish .NET Core Project
         run: dotnet publish Monitor/Monitor.csproj -c:Release -p:GHPages=true -o dist/Web --nologo
-
-      - name: Rename .dll to .bin and update blazor.boot.json
-        run: |
-          for file in dist/Web/wwwroot/_framework/*.dll; do
-            mv "$file" "${file%.dll}.bin"
-          done
-          sed -i 's/\.dll"/.bin"/g' dist/Web/wwwroot/_framework/blazor.boot.json
           
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1

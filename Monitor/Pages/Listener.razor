@@ -77,7 +77,9 @@
                             </div>
                             <button class="btn btn-success" type="button" disabled="@(CurrentClient.IsListening)" @onclick="()=>CurrentClient.StartListening()">Start Listenning</button>
 
-                            <button class="btn btn-danger" type="button" disabled="@(!CurrentClient.IsListening)" @onclick="()=>CurrentClient.StopListening()"> Stop Listenning</button>
+                            <button class="btn btn-danger" type="button" disabled="@(!CurrentClient.IsListening)" @onclick="()=>CurrentClient.StopListening()">Stop Listenning</button>
+
+                            <button class="btn btn-info" type="button" disabled="@(!CurrentClient.EventsListened.Any())" @onclick="()=>CurrentClient.ClearEvents()">Clear</button>
 
                         </div>
                     </div>
